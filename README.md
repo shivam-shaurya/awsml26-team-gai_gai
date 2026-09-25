@@ -1,9 +1,9 @@
 # Amazon ML Challenge 2026 — Business Entity Resolution
 
 Team repo for the challenge (25–27 Sep 2026). Link business records describing the same
-real-world business across three noisy sources, using only names and addresses. See
-`6ab5628d5a817_amazon_ml_challenge_problem_statement.pdf` and
-`6ab509c5b7036_ml_challenge_2026_video.txt` (video transcript) for the full problem statement.
+real-world business across three noisy sources, using only names and addresses. Get the full
+problem statement, guidelines, and video walkthrough directly from the official challenge
+portal — they aren't duplicated in this repo (see below).
 
 ## What's in this repo
 
@@ -11,13 +11,13 @@ real-world business across three noisy sources, using only names and addresses. 
 |---|---|
 | `submission/` | **The actual deliverable.** `code/business_entity_resolution/` (runnable pipeline), `output/` (where `matching_results.tsv` + `candidate_pairs.tsv` land), `Documentation_template.md` (methodology write-up, in progress). This is what goes in the final zip. |
 | `Business_Entity_Resolution_Solution.docx` | Full strategy document — problem breakdown, blocking design, decision-layer math, team workflow/timeline. Read this first for the *why* behind the pipeline's design. |
-| `6ab56657b4f1a_guidelines_and_key_instructions_amazon_ml_challenge_2026.pdf` | Official rules: submission limits (5/day), public vs. private leaderboard, eligibility, fair-play rules. |
 | `Ml-proj1.ipynb` | Historical notebook — **do not use as-is**, it predates the scalability fix in `submission/code/.../er_pipeline.py` (its blocking stage does not finish in reasonable time at full dataset scale). Kept for reference only. |
 
-**Not in this repo:** the actual dataset. It's several GB and is the organizers' contest data —
-download it yourself from the official challenge portal and place it so `dataset/train/` and
-`dataset/test/` are reachable from wherever you run the pipeline (see
-`submission/code/business_entity_resolution/README.md` for exact paths).
+**Not in this repo:** the actual dataset, and the official problem statement / guidelines / video
+transcript PDFs. All of that is the organizers' own material — download it yourself from the
+challenge portal. Place the dataset so `dataset/train/` and `dataset/test/` are reachable from
+wherever you run the pipeline (see `submission/code/business_entity_resolution/README.md` for
+exact paths).
 
 ## Quick start (any team member)
 

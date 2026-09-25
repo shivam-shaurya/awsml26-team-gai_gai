@@ -5,6 +5,13 @@
 dataset/
 *.tsv
 
+# Official challenge materials (problem statement, guidelines, video transcript) — organizers'
+# own documents, not ours to redistribute even privately. Each teammate downloads these
+# directly from the challenge portal.
+6ab5628d5a817_amazon_ml_challenge_problem_statement.pdf
+6ab56657b4f1a_guidelines_and_key_instructions_amazon_ml_challenge_2026.pdf
+6ab509c5b7036_ml_challenge_2026_video.txt
+
 # Local scratch / smoke-test artifacts — not part of the team deliverable.
 smoke/
 docx_out.txt
