@@ -1,0 +1,13 @@
+# Core pipeline (er_pipeline.py) — runs on any teammate's laptop, CPU only
+pandas==2.3.1
+numpy==2.2.6
+scikit-learn==1.7.0
+lightgbm==4.7.0
+rapidfuzz==3.14.1
+
+# GPU-only stage (gpu_embed_blocker.py, cross_encoder.py) — run on Ayush's L40 box only.
+# Install with: pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.5.1
+transformers==4.46.3
+sentence-transformers==3.3.1
+accelerate==1.1.1

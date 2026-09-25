@@ -1,0 +1,29 @@
+# Contest dataset — huge (multi-GB) and not something to duplicate into git even privately.
+# Every teammate downloads it separately from the official challenge portal.
+6ab10eb3b23ba_student_resource/
+6ab10eb3b23ba_student_resource.zip
+dataset/
+*.tsv
+
+# Local scratch / smoke-test artifacts — not part of the team deliverable.
+smoke/
+docx_out.txt
+
+# Superseded by submission/code/business_entity_resolution/src/er_pipeline.py.
+# Kept locally for history; not tracked, to avoid anyone running the stale copy.
+/er_pipeline.py
+
+# Generated outputs (large, reproducible from code + data — don't commit them).
+work_dir/
+submission/output/*.tsv
+!submission/output/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
