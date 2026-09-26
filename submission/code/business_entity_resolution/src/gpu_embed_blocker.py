@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GPU dense-embedding blocker (Ayush's L40, 96GB VRAM). Additive, optional stage: er_pipeline.py
+GPU dense-embedding blocker (Ayush's L40, 96GB VRAM). Additive, optional stage: pipeline.py
 runs fine without ever calling this. Its whole reason to exist is recall that char-3gram TF-IDF
 structurally cannot get:
 
@@ -16,16 +16,16 @@ No internet lookups happen at inference time beyond the one-time model download;
 touches an external database or API to resolve identities, so it stays inside the fair-play rules.
 
 Usage (run from student_resource/, requires the code/business_entity_resolution/src folder on
-PYTHONPATH or run from inside it so `import er_pipeline` resolves):
+PYTHONPATH or run from inside it so `import data_loader, preprocessing` resolves):
 
   python gpu_embed_blocker.py --data dataset --split train \
       --out work_dir/embed_candidates_train.tsv
   python gpu_embed_blocker.py --data dataset --split test \
       --out work_dir/embed_candidates_test.tsv
 
-Then feed the outputs back into er_pipeline.py:
+Then feed the outputs back into pipeline.py:
 
-  python er_pipeline.py --data dataset --out output --mode full \
+  python pipeline.py --data dataset --out output --mode full \
       --embed-candidates-train work_dir/embed_candidates_train.tsv \
       --embed-candidates-test  work_dir/embed_candidates_test.tsv \
       ...
@@ -33,18 +33,20 @@ Then feed the outputs back into er_pipeline.py:
 Output format: long TSV, one row per candidate pair, columns
   source1_entity_id  candidate_entity_id  cos_emb
 This is an intermediate working file (goes under work_dir/, not output/) — it is NOT
-candidate_pairs.tsv. It only widens what er_pipeline.py's own blocking union considers; the
-submitted candidate_pairs.tsv is still whatever er_pipeline.py ends up feeding its model.
+candidate_pairs.tsv. It only widens what pipeline.py's own blocking union considers; the
+submitted candidate_pairs.tsv is still whatever pipeline.py ends up feeding its model.
 """
 import argparse
 import os
 import time
 
 import numpy as np
+import pandas as pd
 import torch
 from sentence_transformers import SentenceTransformer
 
-import er_pipeline as ep
+import data_loader
+import preprocessing
 
 T0 = time.time()
 
@@ -98,7 +100,11 @@ def main():
     model = SentenceTransformer(args.model, device=device)
 
     log(f"loading {args.split}")
-    R = ep.load_split(args.data, args.split)
+    sources = data_loader.load_split(args.data, args.split)
+    R = pd.concat(
+        [preprocessing.normalize_source(df, f"S{k}") for k, df in sources.items()],
+        ignore_index=True,
+    )
     text = (R["name_core"] + " | " + R["addr_norm"]).tolist()
 
     pairs = []

@@ -14,14 +14,14 @@ shuffles, abbreviation patterns the feature table didn't anticipate) and for the
 country, where token-frequency features (IDF, name_freq) trained on US/India carry the least
 information.
 
-It is deliberately a SEPARATE script from er_pipeline.py, not a rewrite of it: it produces a
-probability column that er_pipeline.py merges in as one more LightGBM feature (--xenc-train-probs /
+It is deliberately a SEPARATE script from pipeline.py, not a rewrite of it: it produces a
+probability column that pipeline.py merges in as one more LightGBM feature (--xenc-train-probs /
 --xenc-test-probs), so the GBM keeps doing what it's good at (combining the rank/context/exclusivity
 signals) while this supplies the one feature it structurally cannot compute itself.
 
 Compute budget (read before running): candidate lists are already capped at ~50/entity by
-er_pipeline's blocking, which is still too many pairs to fine-tune/score at full 2M+ S1 entity
-scale end to end. This script narrows to the top --topk-per-entity candidates per S1 (ranked by
+the pipeline's blocking stage, which is still too many pairs to fine-tune/score at full 2M+ S1
+entity scale end to end. This script narrows to the top --topk-per-entity candidates per S1 (ranked by
 the existing TF-IDF/embedding "combo" score) before touching the transformer, since disambiguating
 among a handful of already-plausible candidates is exactly the job a cross-encoder is for; letting
 it also reject far-fetched candidates is what the cheap CPU features already do well. Test-set
@@ -31,7 +31,7 @@ that's comfortably within the time left.
 
 Usage (run from student_resource/):
 
-  # 1) out-of-fold probabilities on train, for stacking into er_pipeline's LightGBM
+  # 1) out-of-fold probabilities on train, for stacking into the pipeline's LightGBM
   python cross_encoder.py --data dataset --mode cv \
       --embed-candidates-train work_dir/embed_candidates_train.tsv \
       --out work_dir/xenc_oof.tsv
@@ -43,7 +43,7 @@ Usage (run from student_resource/):
       --out work_dir/xenc_test.tsv
 
   # 3) feed both into the baseline pipeline
-  python er_pipeline.py --data dataset --out output --mode full \
+  python pipeline.py --data dataset --out output --mode full \
       --xenc-train-probs work_dir/xenc_oof.tsv --xenc-test-probs work_dir/xenc_test.tsv ...
 
 Output format: long TSV, columns  source1_entity_id  candidate_entity_id  p_xenc
@@ -51,7 +51,6 @@ Output format: long TSV, columns  source1_entity_id  candidate_entity_id  p_xenc
 import argparse
 import os
 import time
-from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -61,7 +60,9 @@ from sklearn.model_selection import GroupKFold
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
 
-import er_pipeline as ep
+import data_loader
+from config import PipelineConfig
+from pipeline import build_split as _pipeline_build_split
 
 T0 = time.time()
 
@@ -71,15 +72,16 @@ def log(msg):
 
 
 def build_split(data_dir, split, embed_path, args):
-    """Reuse er_pipeline's own blocking + feature pipeline so candidate pairs are identical to
+    """Reuse pipeline.py's own blocking + feature stages so candidate pairs are identical to
     what the GBM sees; we only need R (for text) and F (for s1/cand ids + the 'combo' rank score
     used to pick the top-k per entity)."""
-    ns = SimpleNamespace(k_name=args.k_name, k_full=args.k_full, k_rev=args.k_rev,
-                         max_cands=args.max_cands, n_jobs=args.n_jobs,
-                         max_trigram_doc_freq=args.max_trigram_doc_freq,
+    cfg = PipelineConfig(data_dir=data_dir, n_jobs=args.n_jobs,
                          embed_candidates_train=embed_path if split == "train" else None,
                          embed_candidates_test=embed_path if split == "test" else None)
-    R, F = ep.build(data_dir, split, ns)
+    cfg.blocking.k_name, cfg.blocking.k_full, cfg.blocking.k_rev = args.k_name, args.k_full, args.k_rev
+    cfg.blocking.max_cands = args.max_cands
+    cfg.blocking.max_trigram_doc_freq = args.max_trigram_doc_freq
+    R, _C, F = _pipeline_build_split(data_dir, split, cfg)
     return R, F
 
 
@@ -199,7 +201,7 @@ def main():
     log("building train candidates/features (reusing er_pipeline blocking)")
     R, F = build_split(args.data, "train", args.embed_candidates_train, args)
     texts = entity_texts(R)
-    gt = ep.read_tsv(os.path.join(args.data, "train", "train_ground_truth.tsv"))
+    gt = data_loader.read_tsv(os.path.join(args.data, "train", "train_ground_truth.tsv"))
     gold_pairs = {(s, c) for s, m in zip(gt.source1_entity_id, gt.matched_entity_ids)
                  for c in filter(None, m.split(","))}
     F = select_topk(F, args.topk_per_entity)
