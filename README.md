@@ -9,9 +9,9 @@ portal — they aren't duplicated in this repo (see below).
 
 | Path | What it is |
 |---|---|
-| `submission/` | **The actual deliverable.** `code/business_entity_resolution/` (runnable pipeline), `output/` (where `matching_results.tsv` + `candidate_pairs.tsv` land), `Documentation_template.md` (methodology write-up, in progress). This is what goes in the final zip. |
+| `submission/` | **The actual deliverable.** `code/business_entity_resolution/` (modular pipeline: `src/` + `tests/`), `reports/` (data audit, blocking recall), `experiments/` (experiment/leaderboard tracking), `output/` (where `matching_results.tsv` + `candidate_pairs.tsv` land), `Documentation_template.md` (methodology write-up, in progress). This is what goes in the final zip. |
 | `Business_Entity_Resolution_Solution.docx` | Full strategy document — problem breakdown, blocking design, decision-layer math, team workflow/timeline. Read this first for the *why* behind the pipeline's design. |
-| `Ml-proj1.ipynb` | Historical notebook — **do not use as-is**, it predates the scalability fix in `submission/code/.../er_pipeline.py` (its blocking stage does not finish in reasonable time at full dataset scale). Kept for reference only. |
+| `Ml-proj1.ipynb` | Historical notebook — **do not use as-is**. Predates the scalability fix now in `submission/code/.../src/blocking.py` (the naive version's blocking stage does not finish in reasonable time at full dataset scale). Kept for reference only. |
 
 **Not in this repo:** the actual dataset, and the official problem statement / guidelines / video
 transcript PDFs. All of that is the organizers' own material — download it yourself from the
@@ -58,7 +58,7 @@ still costs you a submission slot.
 
 - **Trust local out-of-fold cross-validation over the public leaderboard.** Public LB is a
   subset of test data and you only get 5 uploads/day (15 total) — not enough to tune against.
-  `er_pipeline.py --mode cv --loco` is the real signal.
+  `pipeline.py --mode cv --loco` is the real signal.
 - Every submission should follow a measured OOF improvement, not be sent speculatively.
 - See Section 9 of `Business_Entity_Resolution_Solution.docx` for role split and the 3-day
   timeline.
